@@ -46,7 +46,7 @@ services:
       - wso2greg
     volumes: 
       - ./nginx/conf.d:/etc/nginx/conf.d
-      - ./wso2greg:/etc/nginx/ssl/:ro
+      - ./wso2greg/ssl:/etc/nginx/ssl/:ro
     networks:
       - loadbalancing
   mysql:
