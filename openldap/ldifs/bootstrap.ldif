@@ -1,0 +1,88 @@
+dn: dc=example,dc=org
+dc: example
+objectClass: dcObject
+objectClass: organization
+o: Example, Inc
+
+dn: ou=users,dc=example,dc=org
+ou: users
+objectClass: organizationalUnit
+
+dn: ou=groups,dc=example,dc=org
+ou: groups
+objectClass: organizationalUnit
+
+dn: uid=admin,ou=users,dc=example,dc=org
+objectClass: inetOrgPerson
+objectClass: person
+cn: admin
+givenName: Admin
+sn: Admin
+uid: admin
+userPassword: admin
+
+dn: uid=joao,ou=users,dc=example,dc=org
+objectClass: inetOrgPerson
+objectClass: person
+cn: joao
+givenName: Joao
+sn: Pesao
+uid: joao
+userPassword: pass
+
+dn: uid=jose,ou=users,dc=example,dc=org
+objectClass: inetOrgPerson
+objectClass: person
+cn: jose
+givenName: Jose
+sn: Maria
+uid: jose
+userPassword: pass
+
+dn: uid=maria,ou=users,dc=example,dc=org
+objectClass: inetOrgPerson
+objectClass: person
+cn: maria
+givenName: Maria
+sn: Silva
+uid: maria
+userPassword: pass
+
+dn: uid=luis,ou=users,dc=example,dc=org
+objectClass: inetOrgPerson
+objectClass: person
+cn: luis
+givenName: Silva
+sn: Luis
+uid: luis
+userPassword: pass
+
+dn: cn=readers,ou=groups,dc=example,dc=org
+objectClass: groupOfNames
+cn: readers
+member: uid=joao,ou=users,dc=example,dc=org
+member: uid=jose,ou=users,dc=example,dc=org
+member: uid=maria,ou=users,dc=example,dc=org
+member: uid=luis,ou=users,dc=example,dc=org
+member: uid=admin,ou=users,dc=example,dc=org
+
+dn: cn=stores,ou=groups,dc=example,dc=org
+objectClass: groupOfNames
+cn: stores
+member: uid=joao,ou=users,dc=example,dc=org
+member: uid=jose,ou=users,dc=example,dc=org
+member: uid=maria,ou=users,dc=example,dc=org
+member: uid=luis,ou=users,dc=example,dc=org
+member: uid=admin,ou=users,dc=example,dc=org
+
+dn: cn=publishers,ou=groups,dc=example,dc=org
+objectClass: groupOfNames
+cn: publishers
+member: uid=joao,ou=users,dc=example,dc=org
+member: uid=luis,ou=users,dc=example,dc=org
+member: uid=admin,ou=users,dc=example,dc=org
+
+dn: cn=admin,ou=groups,dc=example,dc=org
+objectClass: groupOfNames
+cn: admin
+member: uid=admin,ou=users,dc=example,dc=org
