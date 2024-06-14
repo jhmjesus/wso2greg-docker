@@ -3,7 +3,7 @@ FROM alpine:latest
 ENV LANG='en_US.UTF-8' LANGUAGE='en_US:en' LC_ALL='en_US.UTF-8'
 
 # install dependencies
-RUN apk add --no-cache openjdk8-jre tzdata musl-locales musl-locales-lang bash libxml2-utils netcat-openbsd \
+RUN apk add --no-cache --allow-untrusted --no-check-certificate tzdata musl-locales musl-locales-lang bash libxml2-utils netcat-openbsd \
     && rm -rf /var/cache/apk/*
 
 ENV JAVA_HOME=/usr/lib/jvm/default-jvm/
@@ -12,7 +12,7 @@ ENV PATH=${PATH}:${JAVA_HOME}/bin
 # install Temurin OpenJDK 17
 
 LABEL maintainer="WSO2 Docker Maintainers <dev@wso2.org>"  \
-      com.wso2.docker.source="https://github.com/wso2/docker-apim/releases/tag/v4.3.0.1"
+    com.wso2.docker.source="https://github.com/wso2/docker-apim/releases/tag/v4.3.0.1"
 
 # set Docker image build arguments
 # build arguments for user/group configurations
@@ -63,11 +63,11 @@ ARG WSO2_LDAP_GROUP_LIST_FILTER
 ARG WSO2_SERVER_DIST_URL=https://svn.wso2.org/repos/wso2/scratch/G-Reg/${WSO2_SERVER_VERSION}/${WSO2_SERVER}.zip
 # build argument for MOTD
 ARG MOTD='printf "\n\
- Welcome to WSO2 Docker Resources \n\
- --------------------------------- \n\
- This Docker container comprises of a WSO2 product, running with its latest GA release \n\
- which is under the Apache License, Version 2.0. \n\
- Read more about Apache License, Version 2.0 here @ http://www.apache.org/licenses/LICENSE-2.0.\n"'
+    Welcome to WSO2 Docker Resources \n\
+    --------------------------------- \n\
+    This Docker container comprises of a WSO2 product, running with its latest GA release \n\
+    which is under the Apache License, Version 2.0. \n\
+    Read more about Apache License, Version 2.0 here @ http://www.apache.org/licenses/LICENSE-2.0.\n"'
 ENV ENV=${USER_HOME}"/.ashrc" \
     WSO2_DB_USERNAME="${WSO2_DB_USERNAME}" \
     WSO2_DB_PASSWORD="${WSO2_DB_PASSWORD}" \
@@ -81,16 +81,20 @@ RUN \
     && echo ${MOTD} > "${ENV}"
 
 RUN mkdir -p /etc/.java/.systemPrefs \
-    && chown wso2carbon:wso2 -R /etc/.java/.systemPrefs \
+    && chown ${USER}:${USER_GROUP} -R /etc/.java/.systemPrefs \
     && chmod 755 /etc/.java/.systemPrefs
 
-# copy init script to user home
-COPY --chown=wso2carbon:wso2 docker-entrypoint.sh ${USER_HOME}/
-
 # add the WSO2 product distribution to user's home directory
-RUN wget ${WSO2_SERVER_DIST_URL} -O ${USER_HOME}/${WSO2_SERVER}.zip \
-    && unzip -o -d ${USER_HOME} ${USER_HOME}/${WSO2_SERVER}.zip \
+RUN wget --no-check-certificate ${WSO2_SERVER_DIST_URL} -O ${USER_HOME}/${WSO2_SERVER}.zip \
+    && unzip -o \
+    -d ${USER_HOME} ${USER_HOME}/${WSO2_SERVER}.zip \
     && rm -f ${USER_HOME}/${WSO2_SERVER}.zip
+
+RUN rm -f ${WSO2_SERVER_HOME}/repository/deployment/server/webapps/cmis.war
+RUN rm -f ${WSO2_SERVER_HOME}/repository/resources/webapps/juddiv3.war 
+RUN rm -f ${WSO2_SERVER_HOME}/repository/deployment/server/humantasks/WorkList.zip
+RUN rm -rf ${WSO2_SERVER_HOME}/samples
+
 
 #COPY --chown=wso2carbon:wso2 ${WSO2_SERVER}.zip ${USER_HOME}/
 #RUN unzip -o -d ${USER_HOME} ${USER_HOME}/${WSO2_SERVER}.zip 
@@ -103,18 +107,15 @@ RUN wget ${WSO2_SERVER_DIST_URL} -O ${USER_HOME}/${WSO2_SERVER}.zip \
 
 RUN bash -c 'mkdir -p ${USER_HOME}/solr/{indexed-data,database}'
 
-RUN chown wso2carbon:wso2 -R ${USER_HOME}/solr 
+#RUN rm ${WSO2_SERVER_HOME}/repository/deployment/server/webapps/cmis.war
+#RUN rm ${WSO2_SERVER_HOME}/repository/resources/webapps/juddiv3.war
+#RUN rm ${WSO2_SERVER_HOME}/repository/deployment/server/humantasks/WorkList.zip
 
-RUN rm ${WSO2_SERVER_HOME}/repository/deployment/server/webapps/cmis.war
-RUN rm ${WSO2_SERVER_HOME}/repository/resources/webapps/juddiv3.war
-RUN rm ${WSO2_SERVER_HOME}/repository/deployment/server/humantasks/WorkList.zip
-
-RUN wget https://dev.mysql.com/get/Downloads/Connector-J/${MYSQL_DRIVER}.zip -O ${USER_HOME}/${MYSQL_DRIVER}.zip \
+RUN wget --no-check-certificate https://dev.mysql.com/get/Downloads/Connector-J/${MYSQL_DRIVER}.zip -O ${USER_HOME}/${MYSQL_DRIVER}.zip \
     && unzip -o -d ${USER_HOME} ${USER_HOME}/${MYSQL_DRIVER}.zip \
     && cp ${USER_HOME}/${MYSQL_DRIVER}/${MYSQL_DRIVER}.jar ${WSO2_SERVER_HOME}/repository/components/lib \
-    && rm -f ${USER_HOME}/${MYSQL_DRIVER}.zip
-
-COPY init-setup.sh ${USER_HOME}
+    && rm -rf ${USER_HOME}/${MYSQL_DRIVER}.zip \
+    && rm -rf ${USER_HOME}/${MYSQL_DRIVER}
 
 #COPY *.crt ${USER_HOME}
 
@@ -130,7 +131,12 @@ COPY init-setup.sh ${USER_HOME}
 
 #RUN rm ${USER_HOME}/*.crt
 
-RUN chown wso2carbon:wso2 -R ${WSO2_SERVER_HOME}
+# copy init script to user home
+COPY *.sh ${USER_HOME}
+
+RUN chmod 777 ${USER_HOME}/*.sh
+
+RUN chown ${USER}:${USER_GROUP} -R ${USER_HOME}
 
 # remove unnecesary packages
 RUN apk del netcat-openbsd
