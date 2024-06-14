@@ -3,7 +3,7 @@ FROM alpine:latest
 ENV LANG='en_US.UTF-8' LANGUAGE='en_US:en' LC_ALL='en_US.UTF-8'
 
 # install dependencies
-RUN apk add --no-cache --allow-untrusted --no-check-certificate tzdata musl-locales musl-locales-lang bash libxml2-utils netcat-openbsd \
+RUN apk add --no-cache --allow-untrusted --no-check-certificate openjdk8-jre openjdk8-jre tzdata musl-locales musl-locales-lang bash libxml2-utils netcat-openbsd \
     && rm -rf /var/cache/apk/*
 
 ENV JAVA_HOME=/usr/lib/jvm/default-jvm/
@@ -131,23 +131,23 @@ RUN wget --no-check-certificate https://dev.mysql.com/get/Downloads/Connector-J/
 
 #RUN rm ${USER_HOME}/*.crt
 
-# copy init script to user home
-COPY *.sh ${USER_HOME}
-
-RUN chmod 777 ${USER_HOME}/*.sh
-
 RUN chown ${USER}:${USER_GROUP} -R ${USER_HOME}
+
+# copy init script to user home
+COPY --chown=${USER}:${USER_GROUP} *.sh ${USER_HOME}
+
+RUN chmod 755 ${USER_HOME}/*.sh
 
 # remove unnecesary packages
 RUN apk del netcat-openbsd
 
 # set the user and work directory
-USER ${USER_ID}
+USER ${USER}
 WORKDIR ${USER_HOME}
 
 # set environment variables
 ENV WORKING_DIRECTORY=${USER_HOME} \
-    WSO2_SERVER_HOME=${WSO2_SERVER_HOME} 
+    WSO2_SERVER_HOME=${WSO2_SERVER_HOME}
 
 # expose ports
 EXPOSE 9443 
