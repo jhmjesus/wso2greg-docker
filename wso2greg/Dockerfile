@@ -9,10 +9,8 @@ RUN apk add --no-cache --allow-untrusted --no-check-certificate openjdk8-jre ope
 ENV JAVA_HOME=/usr/lib/jvm/default-jvm/
 ENV PATH=${PATH}:${JAVA_HOME}/bin
 
-# install Temurin OpenJDK 17
-
-LABEL maintainer="WSO2 Docker Maintainers <dev@wso2.org>"  \
-    com.wso2.docker.source="https://github.com/wso2/docker-apim/releases/tag/v4.3.0.1"
+LABEL maintainer="Docker Maintainers <jhmjesus@yahoo.com.br>"  \
+    com.wso2.docker.source="https://github.com/jhmjesus/wso2greg-docker"
 
 # set Docker image build arguments
 # build arguments for user/group configurations
@@ -21,6 +19,7 @@ ARG USER_ID=10001
 ARG USER_GROUP=wso2
 ARG USER_GROUP_ID=10001
 ARG USER_HOME=/home/${USER}
+
 # build arguments for WSO2 product installation
 ARG WSO2_SERVER_NAME="WSO2 Governance Regitry"
 ARG WSO2_DIST_SERVER_NAME=wso2greg
@@ -59,8 +58,9 @@ ARG WSO2_LDAP_GROUP_NAME_ATTR
 ARG WSO2_LDAP_GROUP_NAME_SEARCH_FILTER
 ARG WSO2_LDAP_GROUP_LIST_FILTER
 
-#ARG WSO2_SERVER_DIST_URL=https://github.com/wso2/${WSO2_SERVER_REPOSITORY}/releases/download/v${WSO2_SERVER_VERSION}/${WSO2_SERVER}.zip
+# this source was not existis any more WSO2_SERVER_DIST_URL=https://github.com/wso2/${WSO2_SERVER_REPOSITORY}/releases/download/v${WSO2_SERVER_VERSION}/${WSO2_SERVER}.zip
 ARG WSO2_SERVER_DIST_URL=https://svn.wso2.org/repos/wso2/scratch/G-Reg/${WSO2_SERVER_VERSION}/${WSO2_SERVER}.zip
+
 # build argument for MOTD
 ARG MOTD='printf "\n\
     Welcome to WSO2 Docker Resources \n\
@@ -80,6 +80,7 @@ RUN \
     && adduser -S -u ${USER_ID} -h ${USER_HOME} -G ${USER_GROUP} ${USER} \
     && echo ${MOTD} > "${ENV}"
 
+# configure the java system io system preferences    
 RUN mkdir -p /etc/.java/.systemPrefs \
     && chown ${USER}:${USER_GROUP} -R /etc/.java/.systemPrefs \
     && chmod 755 /etc/.java/.systemPrefs
@@ -90,47 +91,23 @@ RUN wget --no-check-certificate ${WSO2_SERVER_DIST_URL} -O ${USER_HOME}/${WSO2_S
     -d ${USER_HOME} ${USER_HOME}/${WSO2_SERVER}.zip \
     && rm -f ${USER_HOME}/${WSO2_SERVER}.zip
 
+# removing some unnecessary resouces, for my necessities
 RUN rm -f ${WSO2_SERVER_HOME}/repository/deployment/server/webapps/cmis.war
 RUN rm -f ${WSO2_SERVER_HOME}/repository/resources/webapps/juddiv3.war 
 RUN rm -f ${WSO2_SERVER_HOME}/repository/deployment/server/humantasks/WorkList.zip
 RUN rm -rf ${WSO2_SERVER_HOME}/samples
 
-
-#COPY --chown=wso2carbon:wso2 ${WSO2_SERVER}.zip ${USER_HOME}/
-#RUN unzip -o -d ${USER_HOME} ${USER_HOME}/${WSO2_SERVER}.zip 
-
-#do COPY org.wso2.carbon.registry.extensions-4.6.3.jar ${WSO2_SERVER_HOME}/repository/components/plugins
-#COPY org.wso2.carbon.event.output.adapter.kafka.server.feature-5.0.11.zip ${USER_HOME}
-
-#RUN unzip -o -d ${USER_HOME}/feature ${USER_HOME}/org.wso2.carbon.event.output.adapter.kafka.server.feature-5.0.11.zip
-#RUN mv ${USER_HOME}/feature/plugins/org.wso2.carbon.event.output.adapter.kafka-5.0.11.jar ${WSO2_SERVER_HOME}/repository/components/plugins
-
+# create a solr server directories
 RUN bash -c 'mkdir -p ${USER_HOME}/solr/{indexed-data,database}'
 
-#RUN rm ${WSO2_SERVER_HOME}/repository/deployment/server/webapps/cmis.war
-#RUN rm ${WSO2_SERVER_HOME}/repository/resources/webapps/juddiv3.war
-#RUN rm ${WSO2_SERVER_HOME}/repository/deployment/server/humantasks/WorkList.zip
-
+# add mysql JDBC driver into WSO2 produt installation
 RUN wget --no-check-certificate https://dev.mysql.com/get/Downloads/Connector-J/${MYSQL_DRIVER}.zip -O ${USER_HOME}/${MYSQL_DRIVER}.zip \
     && unzip -o -d ${USER_HOME} ${USER_HOME}/${MYSQL_DRIVER}.zip \
     && cp ${USER_HOME}/${MYSQL_DRIVER}/${MYSQL_DRIVER}.jar ${WSO2_SERVER_HOME}/repository/components/lib \
     && rm -rf ${USER_HOME}/${MYSQL_DRIVER}.zip \
     && rm -rf ${USER_HOME}/${MYSQL_DRIVER}
 
-#COPY *.crt ${USER_HOME}
-
-#RUN keytool -import -storepass wso2carbon -keypass wso2carbon -noprompt -alias ssl -keystore ${WSO2_SERVER_HOME}/repository/resources/security/wso2carbon.jks -file ${USER_HOME}/self-ssl.crt
-#RUN keytool -import -storepass wso2carbon -keypass wso2carbon -noprompt -trustcacerts -alias greg -keystore ${WSO2_SERVER_HOME}/repository/resources/security/wso2carbon.jks -file ${USER_HOME}/self-ssl.crt
-
-#RUN keytool -import -storepass wso2carbon -keypass wso2carbon -noprompt -alias dist-wso2-repo -keystore ${WSO2_SERVER_HOME}/repository/resources/security/wso2carbon.jks -file ${USER_HOME}/product-dist-wso2.crt
-#RUN keytool -import -storepass wso2carbon -keypass wso2carbon -noprompt -trustcacerts -alias dist-wso2-repo -keystore ${WSO2_SERVER_HOME}/repository/resources/security/wso2carbon.jks -file ${USER_HOME}/product-dist-wso2.crt
-#RUN keytool -importkeystore -srckeystore /${WSO2_SERVER_HOME}/repository/resources/security/wso2carbon.jks -destkeystore ${WSO2_SERVER_HOME}/repository/resources/security/wso2carbon.jks -deststoretype pkcs12
-#RUN keytool -import -storepass wso2carbon -keypass wso2carbon -noprompt -trustcacerts -alias dist-wso2-repo -keystore ${WSO2_SERVER_HOME}/repository/resources/security/client-truststore.jks -file ${USER_HOME}/product-dist-wso2.crt
-
-#RUN keytool -import -storepass changeit -keypass changeit -noprompt -alias dist-wso2-repo -keystore /usr/lib/jvm/default-jvm/jre/lib/security/cacerts -file ${USER_HOME}/product-dist-wso2.crt
-
-#RUN rm ${USER_HOME}/*.crt
-
+# add permissions to user home     
 RUN chown ${USER}:${USER_GROUP} -R ${USER_HOME}
 
 # copy init script to user home
@@ -149,9 +126,9 @@ WORKDIR ${USER_HOME}
 ENV WORKING_DIRECTORY=${USER_HOME} \
     WSO2_SERVER_HOME=${WSO2_SERVER_HOME}
 
-# expose ports
+# expose ports 
+# available GREG ports 9443 9763 9999 11111 8280 8243 5672 9711 9611 9099
 EXPOSE 9443 
-#9763 9999 11111 8280 8243 5672 9711 9611 9099
 
 # initiate container and start WSO2 Carbon server
 ENTRYPOINT ["/home/wso2carbon/docker-entrypoint.sh"]
