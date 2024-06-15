@@ -5,9 +5,9 @@ set -e
 #################################
 # Required Docker image ARG values
 [[ -z "$WSO2_DB_URL" || ! -v  WSO2_DB_URL ]] && echo "WSO2_DB_URL is required" && exit 1
-[[ -z "$WSO2_DB_DRIVER" || ! -v  WSO2_DB_DRIVER ]] && echo "WSO2_DB_DRIVER is required" && exit 1
-[[ -z "$WSO2_DB_PASSWORD" || ! -v  WSO2_DB_PASSWORD ]] && echo "WSO2_DB_PASSWORD is required" && exit 1
-[[ -z "$WSO2_DB_USERNAME" || ! -v  WSO2_DB_USERNAME ]] && echo "WSO2_DB_USERNAME is required" && exit 1
+[[ -z "$WSO2_DB_DRIVER" || ! -v  WSO2_DB_DRIVER ]] && echo "WSO2_DB_DRIVER is required" && exit 2
+[[ -z "$WSO2_DB_PASSWORD" || ! -v  WSO2_DB_PASSWORD ]] && echo "WSO2_DB_PASSWORD is required" && exit 3
+[[ -z "$WSO2_DB_USERNAME" || ! -v  WSO2_DB_USERNAME ]] && echo "WSO2_DB_USERNAME is required" && exit 4
 
 #################################
 # Host name Server configurations and replacement values
@@ -52,7 +52,6 @@ WSO2_MASTER_DATABASE=${WSO2_SERVER_HOME}/repository/conf/datasources/master-data
 sed -i "s@$WSO2_DB_URL_DEFAULT@$WSO2_DB_URL@g" $WSO2_MASTER_DATABASE
 sed -i "s@username>$WSO2_DB_USERNAME_DEFAULT@username>$WSO2_DB_USERNAME@g" $WSO2_MASTER_DATABASE
 sed -i "s@password>$WSO2_DB_PASSWORD_DEFAULT@password>$WSO2_DB_PASSWORD@g" $WSO2_MASTER_DATABASE
-sed -i "s@driverClassName>$WSO2_DB_DRIVER_DEFAULT@driverClassName>$WSO2_DB_DRIVER@g" $WSO2_MASTER_DATABASE
 sed -i "s@driverClassName>$WSO2_DB_DRIVER_DEFAULT@driverClassName>$WSO2_DB_DRIVER@g" $WSO2_MASTER_DATABASE
 sed -i "27s@100@$WSO2_DB_MAX_ACTIVE@g" $WSO2_MASTER_DATABASE
 sed -i "28s@10000@$WSO2_DB_MAX_WAIT@g" $WSO2_MASTER_DATABASE
