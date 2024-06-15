@@ -1,0 +1,93 @@
+services:
+  wso2greg:
+    build: ./wso2greg
+    image: jhmjesus/wso2greg:1.0
+    hostname: "greg.joy.net"
+    deploy:
+      mode: replicated
+      replicas: 1
+    links:
+      - "mysql:wso2carbon-db"
+      - "openldap:ldap"
+    depends_on: 
+      - mysql
+      - openldap
+#    ports:
+#      - '9443:9443'
+    environment:
+      - WSO2_DB_DRIVER=com.mysql.cj.jdbc.Driver
+      - WSO2_DB_URL=jdbc:mysql://wso2carbon-db:3306/WSO2CARBON_DB
+      - WSO2_DB_USERNAME=wso2carbon
+      - WSO2_DB_PASSWORD=wso2carbon      
+#      - WSO2_METRICS_DB_URL=jdbc:mysql://172.17.0.2:3306/WSO2METRICS_DB
+#      - WSO2_SOCIAL_DB_URL=jdbc:mysql://172.17.0.2:3306/WSO2SOCIAL_DB
+#      - WSO2_BPS_DB_URL=jdbc:mysql://172.17.0.2:3306/WSO2BPS_DB
+      - WSO2_SERVER_NAME="Governance Registry"
+      - WSO2_HOSTNAME=greg.joy.net
+      - WSO2_LDAP_URL=ldap://ldap:389
+      - WSO2_LDAP_CONN_NAME=cn=adminbind,dc=example,dc=org
+      - WSO2_LDAP_CONN_PASSWORD=admin
+      - WSO2_LDAP_USER_SEARCH_BASE=ou=users,dc=example,dc=org
+#      - WSO2_LDAP_USERNAME_ATTR=uid
+      - WSO2_LDAP_USERNAME_SEARCH_FILTER=(&amp;(objectClass=inetOrgPerson)(uid=?))
+      - WSO2_LDAP_USERNAME_LIST_FILTER=(objectClass=inetOrgPerson)
+      - WSO2_LDAP_GROUP_SEARCH_BASE=ou=groups,dc=example,dc=org
+#      - WSO2_LDAP_GROUP_NAME_ATTR=cn
+#      - WSO2_LDAP_GROUP_NAME_SEARCH_FILTER=(&amp;(objectClass=groupOfNames)(cn=?))
+#      - WSO2_LDAP_GROUP_LIST_FILTER=(objectClass=groupOfNames)
+#      - WSO2_LDAP_GROUP_MEMBERSHIP_ATTR=member
+    networks:
+      - loadbalancing
+  nginx:  
+    build: ./nginx
+    ports:
+      - "9443:9443"
+    depends_on:
+      - wso2greg
+    volumes: 
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      - ./wso2greg/ssl:/etc/nginx/ssl/:ro
+    networks:
+      - loadbalancing
+  mysql:
+    image: mysql:5.7
+    ports:
+      - '3306:3306'
+    restart: always
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_USER=wso2carbon
+      - MYSQL_PASSWORD=wso2carbon
+      - MYSQL_DATABASE=WSO2CARBON_DB
+    volumes:
+      - ./mysql/data:/var/lib/mysql
+      - ./mysql/initdb.d:/docker-entrypoint-initdb.d
+    networks:
+      - loadbalancing
+  openldap:
+    image: docker.io/bitnami/openldap:latest
+    ports:
+      - '389:389'
+      - '636:1636'
+    environment:
+      - LDAP_PASSWORD_HASH={CLEARTEXT}
+      - LDAP_PORT_NUMBER=389
+      - LDAP_ADMIN_USERNAME=adminbind
+      - LDAP_ADMIN_PASSWORD=admin
+#      - LDAP_CONFIG_ADMIN_ENABLED=yes
+#      - LDAP_CONFIG_ADMIN_USERNAME=admin
+#      - LDAP_CONFIG_ADMIN_PASSWORD=admin
+#      - LDAP_USERS=user01,user02
+#      - LDAP_PASSWORDS=pass1,pass2
+      - LDAP_BIND_DN=cn=adminbind,dc=example,dc=org
+      - LDAP_BASE=,dc=example,dc=org
+      - LDAP_CUSTOM_LDIF_DIR=/ldifs
+      - LDAP_LOGLEVEL=2048
+#      - LDAP_EXTRA_SCHEMAS="inetorgperson,cosine"
+    volumes:
+      - './openldap/data/ldap:/bitnami/openldap'
+      - './openldap/ldifs:/ldifs'
+    networks:
+      - loadbalancing
+networks:
+  loadbalancing:
