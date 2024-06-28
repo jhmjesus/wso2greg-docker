@@ -1,13 +1,29 @@
 #!/bin/bash
 
+h2_prms=( "org.h2.Driver" )
+mysql_prms=( "com.mysql.cj.jdbc.Driver" )
+postgresql_prms=( "org.postgresql.Driver" )
+oracle_prms=( "oracle.jdbc.OracleDriver" )
+
+function get_db_type() {
+  [[ $1 =~ .*(mysql|postgresql|oracle).* ]]
+  echo ${BASH_REMATCH[1]}
+}
+
+function get_db_driver() {
+  prms=$(get_db_type $1)
+  prms+=_prms
+  echo ${!prms}
+}
+
 set -e
 
 #################################
 # Required Docker image ARG values
 [[ -z "$WSO2_DB_URL" || ! -v  WSO2_DB_URL ]] && echo "WSO2_DB_URL is required" && exit 1
-[[ -z "$WSO2_DB_DRIVER" || ! -v  WSO2_DB_DRIVER ]] && echo "WSO2_DB_DRIVER is required" && exit 2
-[[ -z "$WSO2_DB_PASSWORD" || ! -v  WSO2_DB_PASSWORD ]] && echo "WSO2_DB_PASSWORD is required" && exit 3
-[[ -z "$WSO2_DB_USERNAME" || ! -v  WSO2_DB_USERNAME ]] && echo "WSO2_DB_USERNAME is required" && exit 4
+#[[ -z "$WSO2_DB_DRIVER" || ! -v  WSO2_DB_DRIVER ]] && echo "WSO2_DB_DRIVER is required" && exit 2
+[[ -z "$WSO2_DB_PASSWORD" || ! -v  WSO2_DB_PASSWORD ]] && echo "WSO2_DB_PASSWORD is required" && exit 2
+[[ -z "$WSO2_DB_USERNAME" || ! -v  WSO2_DB_USERNAME ]] && echo "WSO2_DB_USERNAME is required" && exit 3
 
 #################################
 # Host name Server configurations and replacement values
@@ -41,7 +57,7 @@ WSO2_BPS_DB_URL_DEFAULT="jdbc:h2:file:repository/database/jpadb;DB_CLOSE_ON_EXIT
 WSO2_DB_USERNAME="${WSO2_DB_USERNAME-$WSO2_DB_USERNAME_DEFAULT}"
 WSO2_DB_PASSWORD="${WSO2_DB_PASSWORD-$WSO2_DB_PASSWORD_DEFAULT}"
 WSO2_DB_URL="${WSO2_DB_URL-$WSO2_DB_URL_DEFAULT}"
-WSO2_DB_DRIVER="${WSO2_DB_DRIVER-$WSO2_DB_DRIVER_DEFAULT}"
+WSO2_DB_DRIVER=$(get_db_driver ${WSO2_DB_URL})
 WSO2_DB_MAX_ACTIVE="100"
 WSO2_DB_MAX_IDLE="20"
 WSO2_DB_MAX_WAIT="60000"
@@ -49,7 +65,7 @@ WSO2_DB_MAX_WAIT="60000"
 # Master datasource configuration file
 WSO2_MASTER_DATABASE=${WSO2_SERVER_HOME}/repository/conf/datasources/master-datasources.xml
 
-sed -i "s@$WSO2_DB_URL_DEFAULT@$WSO2_DB_URL@g" $WSO2_MASTER_DATABASE
+sed -i "s|$WSO2_DB_URL_DEFAULT|$WSO2_DB_URL|g" $WSO2_MASTER_DATABASE
 sed -i "s@username>$WSO2_DB_USERNAME_DEFAULT@username>$WSO2_DB_USERNAME@g" $WSO2_MASTER_DATABASE
 sed -i "s@password>$WSO2_DB_PASSWORD_DEFAULT@password>$WSO2_DB_PASSWORD@g" $WSO2_MASTER_DATABASE
 sed -i "s@driverClassName>$WSO2_DB_DRIVER_DEFAULT@driverClassName>$WSO2_DB_DRIVER@g" $WSO2_MASTER_DATABASE
@@ -61,7 +77,7 @@ sed -i "28s@10000@$WSO2_DB_MAX_WAIT@g" $WSO2_MASTER_DATABASE
 WSO2_METRICS_DB_USERNAME="${WSO2_METRICS_DB_USERNAME=$WSO2_DB_USERNAME}"
 WSO2_METRICS_DB_PASSWORD="${WSO2_METRICS_DB_PASSWORD=$WSO2_DB_PASSWORD}"
 WSO2_METRICS_DB_URL="${WSO2_METRICS_DB_URL=$WSO2_DB_URL}"
-WSO2_METRICS_DB_DRIVER="${WSO2_METRICS_DB_DRIVER=$WSO2_DB_DRIVER}"
+WSO2_METRICS_DB_DRIVER=$(get_db_driver ${WSO2_METRICS_DB_URL})
 WSO2_METRICS_DB_MAX_ACTIVE="50"
 WSO2_METRICS_DB_MAX_IDLE="20"
 WSO2_METRICS_DB_MAX_WAIT="60000"
@@ -69,7 +85,7 @@ WSO2_METRICS_DB_MAX_WAIT="60000"
 # Metrics datasource configuration file
 WSO2_METRICS_DATABASE=${WSO2_SERVER_HOME}/repository/conf/datasources/metrics-datasources.xml
 
-sed -i "s@$WSO2_METRICS_DB_URL_DEFAULT@$WSO2_METRICS_DB_URL@g" $WSO2_METRICS_DATABASE
+sed -i "s|$WSO2_METRICS_DB_URL_DEFAULT|$WSO2_METRICS_DB_URL|g" $WSO2_METRICS_DATABASE
 sed -i "s@username>$WSO2_DB_USERNAME_DEFAULT@username>$WSO2_METRICS_DB_USERNAME@g" $WSO2_METRICS_DATABASE
 sed -i "s@password>$WSO2_DB_PASSWORD_DEFAULT@password>$WSO2_METRICS_DB_PASSWORD@g" $WSO2_METRICS_DATABASE
 sed -i "s@driverClassName>$WSO2_DB_DRIVER_DEFAULT@driverClassName>$WSO2_METRICS_DB_DRIVER@g" $WSO2_METRICS_DATABASE
@@ -82,7 +98,7 @@ sed -i "38i                    <maxIdle>$WSO2_METRICS_DB_MAX_IDLE</maxIdle>" $WS
 WSO2_SOCIAL_DB_USERNAME="${WSO2_SOCIAL_DB_USERNAME=$WSO2_DB_USERNAME}"
 WSO2_SOCIAL_DB_PASSWORD="${WSO2_SOCIAL_DB_PASSWORD=$WSO2_DB_PASSWORD}"
 WSO2_SOCIAL_DB_URL="${WSO2_SOCIAL_DB_URL=$WSO2_DB_URL}"
-WSO2_SOCIAL_DB_DRIVER="${WSO2_SOCIAL_DB_DRIVER=$WSO2_DB_DRIVER}"
+WSO2_SOCIAL_DB_DRIVER=$(get_db_driver ${WSO2_SOCIAL_DB_URL})
 WSO2_SOCIAL_DB_MAX_ACTIVE="5"
 WSO2_SOCIAL_DB_MAX_IDLE="2"
 WSO2_SOCIAL_DB_MAX_WAIT="6000"
@@ -90,7 +106,7 @@ WSO2_SOCIAL_DB_MAX_WAIT="6000"
 # Social datasource configuration file
 WSO2_SOCIAL_DATABASE=${WSO2_SERVER_HOME}/repository/conf/datasources/social-datasources.xml
 
-sed -i "s@$WSO2_SOCIAL_DB_URL_DEFAULT@$WSO2_SOCIAL_DB_URL@g" $WSO2_SOCIAL_DATABASE
+sed -i "s|$WSO2_SOCIAL_DB_URL_DEFAULT|$WSO2_SOCIAL_DB_URL|g" $WSO2_SOCIAL_DATABASE
 sed -i "s@username>$WSO2_DB_USERNAME_DEFAULT@username>$WSO2_SOCIAL_DB_USERNAME@g" $WSO2_SOCIAL_DATABASE
 sed -i "s@password>$WSO2_DB_PASSWORD_DEFAULT@password>$WSO2_SOCIAL_DB_PASSWORD@g" $WSO2_SOCIAL_DATABASE
 sed -i "s@driverClassName>$WSO2_DB_DRIVER_DEFAULT@driverClassName>$WSO2_SOCIAL_DB_DRIVER@g" $WSO2_SOCIAL_DATABASE
@@ -103,7 +119,7 @@ sed -i "22i<maxIdle>$WSO2_SOCIAL_DB_MAX_IDLE</maxIdle>" $WSO2_SOCIAL_DATABASE
 WSO2_BPS_DB_USERNAME="${WSO2_BPS_DB_USERNAME=$WSO2_DB_USERNAME}"
 WSO2_BPS_DB_PASSWORD="${WSO2_BPS_DB_PASSWORD=$WSO2_DB_PASSWORD}"
 WSO2_BPS_DB_URL="${WSO2_BPS_DB_URL=$WSO2_DB_URL}"
-WSO2_BPS_DB_DRIVER="${WSO2_BPS_DB_DRIVER=$WSO2_DB_DRIVER}"
+WSO2_BPS_DB_DRIVER=$(get_db_driver ${WSO2_BPS_DB_URL})
 WSO2_BPS_DB_MAX_ACTIVE="10"
 WSO2_BPS_DB_MAX_IDLE="2"
 WSO2_BPS_DB_MAX_WAIT="1000"
@@ -111,7 +127,7 @@ WSO2_BPS_DB_MAX_WAIT="1000"
 # BPS datasource configuration file
 WSO2_BPS_DATABASE=${WSO2_SERVER_HOME}/repository/conf/datasources/bps-datasources.xml
 
-sed -i "s@$WSO2_BPS_DB_URL_DEFAULT@$WSO2_BPS_DB_URL@g" $WSO2_BPS_DATABASE
+sed -i "s|$WSO2_BPS_DB_URL_DEFAULT|$WSO2_BPS_DB_URL|g" $WSO2_BPS_DATABASE
 sed -i "s@username>$WSO2_DB_USERNAME_DEFAULT@username>$WSO2_BPS_DB_USERNAME@g" $WSO2_BPS_DATABASE
 sed -i "s@password>$WSO2_DB_PASSWORD_DEFAULT@password>$WSO2_BPS_DB_PASSWORD@g" $WSO2_BPS_DATABASE
 sed -i "s@driverClassName>$WSO2_DB_DRIVER_DEFAULT@driverClassName>$WSO2_BPS_DB_DRIVER@g" $WSO2_BPS_DATABASE

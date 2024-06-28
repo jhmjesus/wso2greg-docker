@@ -3,7 +3,7 @@ FROM alpine:latest
 ENV LANG='en_US.UTF-8' LANGUAGE='en_US:en' LC_ALL='en_US.UTF-8'
 
 # install dependencies
-RUN apk add --no-cache --allow-untrusted --no-check-certificate openjdk8-jre openjdk8-jre tzdata musl-locales musl-locales-lang bash libxml2-utils netcat-openbsd \
+RUN apk add --no-cache --allow-untrusted --no-check-certificate openjdk8-jre tzdata musl-locales musl-locales-lang bash libxml2-utils netcat-openbsd \
     && rm -rf /var/cache/apk/*
 
 ENV JAVA_HOME=/usr/lib/jvm/default-jvm/
@@ -99,6 +99,11 @@ RUN rm -rf ${WSO2_SERVER_HOME}/samples
 
 # create a solr server directories
 RUN bash -c 'mkdir -p ${USER_HOME}/solr/{indexed-data,database}'
+
+# add mysql JDBC driver into WSO2 produt installation
+RUN wget --no-check-certificate "https://repo1.maven.org/maven2/org/postgresql/postgresql/42.6.0/postgresql-42.6.0.jar" -P ${WSO2_SERVER_HOME}/repository/components/lib \
+&& wget --no-check-certificate "https://repo1.maven.org/maven2/com/mysql/mysql-connector-j/8.4.0/mysql-connector-j-8.4.0.jar" -P ${WSO2_SERVER_HOME}/repository/components/lib \
+&& wget --no-check-certificate "https://repo1.maven.org/maven2/com/oracle/ojdbc/ojdbc8/19.3.0.0/ojdbc8-19.3.0.0.jar" -P ${WSO2_SERVER_HOME}/repository/components/lib
 
 # add mysql JDBC driver into WSO2 produt installation
 RUN wget --no-check-certificate https://dev.mysql.com/get/Downloads/Connector-J/${MYSQL_DRIVER}.zip -O ${USER_HOME}/${MYSQL_DRIVER}.zip \
