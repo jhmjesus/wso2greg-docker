@@ -5,7 +5,7 @@ In this installation of the GREG I was create LDAP, MYSQL and some product custo
 
 ## Features
 - [x] Server hostname configuration
-- [x] MySQL connection configuration
+- [x] MySQL, PostgreSQL and Oracle connection configuration
 - [x] LDAP User Store configuration
 - [x] Disable OSCR security
 
@@ -25,7 +25,6 @@ The basic command suggested to initialize a container is:
 
 ```bash
 docker run -it -p 9443:9443 \ 
--e "WSO2_DB_DRIVER=com.mysql.jdbc.Driver" \
 -e "WSO2_DB_URL=jdbc:mysql://mysql:3306/WSO2CARBON_DB" \
 jhmjesus/wso2greg
 ```
@@ -45,16 +44,6 @@ Docker ENV Variable    | Description  | Default value
 ```WSO2_DB_USERNAME``` | DB username  | ```wso2carbon```
 ```WSO2_DB_PASSWORD``` | DB password  | ```wso2carbon```
 
-### JDBC Driver
-To set the JDBC Driver to use in database configuration is necessary to define java class in ```WSO2_DB_DRIVER``` docker Env variable.
-
-```bash
-docker run -it \ 
--e "WSO2_DB_DRIVER=com.mysql.jdbc.Driver" \
-   : \
-jhmjesus/wso2greg
-```
-
 ### Single database
 There are 4 databases in GREG, but we can configure only one URL to single database in ```WSO2_DB_URL``` docker ENV variable.
 
@@ -62,7 +51,6 @@ We can create an instance running:
 
 ```bash
 docker run -it \ 
--e "WSO2_DB_DRIVER=com.mysql.jdbc.Driver" \
 -e "WSO2_DB_URL=jdbc:mysql://mysql:3306/WSO2CARBON_DB" \
    : \
 jhmjesus/wso2greg
@@ -85,7 +73,6 @@ We can create an instance running:
 
 ```bash
 docker run -it \ 
--e "WSO2_DB_DRIVER=com.mysql.jdbc.Driver" \
 -e "WSO2_DB_URL=jdbc:mysql://mysql:3306/WSO2CARBON_DB" \
 -e "WSO2_METRICS_DB_URL=jdbc:mysql://mysql:3306/WSO2METRICS_DB" \
 -e "WSO2_SOCIAL_DB_URL=jdbc:mysql://mysql:3306/WSO2SOCIAL_DB" \
@@ -117,4 +104,4 @@ Docker ENV variable                      | Description                 | Default
 
 # Using docker compose
 
-TBD...
+To test and enable a full environment to use this WSO2 Governance Registry Docker image, you can do so through the docker compose project [].
